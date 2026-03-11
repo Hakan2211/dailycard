@@ -23,7 +23,13 @@ import {
   Eye,
   EyeOff,
   Shield,
+  ChevronRight,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/admin")({
@@ -58,7 +64,7 @@ function AdminPage() {
     return (
       <Layout>
         <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-violet-600" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
         </div>
       </Layout>
     );
@@ -153,14 +159,14 @@ function DeckManager({
   const [description, setDescription] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [category, setCategory] = useState("");
-  const [colorTheme, setColorTheme] = useState("violet");
+  const [colorTheme, setColorTheme] = useState("emerald");
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setCoverImageUrl("");
     setCategory("");
-    setColorTheme("violet");
+    setColorTheme("emerald");
     setEditingDeck(null);
   };
 
@@ -197,7 +203,7 @@ function DeckManager({
         await createDeck({
           title: title.trim(),
           description: description.trim(),
-          coverImageUrl: coverImageUrl.trim() || "https://placehold.co/600x400/8b5cf6/white?text=Deck",
+          coverImageUrl: coverImageUrl.trim() || "https://placehold.co/600x400/3b82f6/white?text=Deck",
           category: category.trim() || "general",
           colorTheme,
         });
@@ -248,7 +254,8 @@ function DeckManager({
         {decks?.map((deck) => (
           <div
             key={deck._id}
-            className="flex items-center gap-4 rounded-xl border bg-white p-4 shadow-sm transition-colors hover:bg-slate-50"
+            className="flex items-center gap-4 rounded-xl border bg-white p-4 shadow-sm transition-colors hover:bg-slate-50 cursor-pointer group"
+            onClick={() => onSelectDeck(deck._id)}
           >
             {/* Cover Image Thumbnail */}
             <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100">
@@ -295,44 +302,68 @@ function DeckManager({
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-1 shrink-0">
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => handleToggleActive(deck)}
-                title={deck.isActive ? "Deactivate" : "Activate"}
-              >
-                {deck.isActive ? (
-                  <Eye className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <EyeOff className="h-4 w-4 text-slate-400" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => onSelectDeck(deck._id)}
-                title="Manage cards"
-              >
-                <Layers className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => openEdit(deck)}
-                title="Edit deck"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setDeleteConfirm(deck._id)}
-                title="Delete deck"
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
+            <div
+              className="flex items-center gap-1 shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => handleToggleActive(deck)}
+                  >
+                    {deck.isActive ? (
+                      <Eye className="h-4 w-4 text-emerald-600" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 text-slate-400" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {deck.isActive ? "Deactivate" : "Activate"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => onSelectDeck(deck._id)}
+                  >
+                    <Layers className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Manage cards</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => openEdit(deck)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit deck</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setDeleteConfirm(deck._id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete deck</TooltipContent>
+              </Tooltip>
             </div>
+
+            {/* Chevron hint */}
+            <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-500" />
           </div>
         ))}
 
@@ -376,7 +407,7 @@ function DeckManager({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Mindful Animals"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -388,7 +419,7 @@ function DeckManager({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="A short description of this deck"
                 rows={2}
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
 
@@ -400,7 +431,7 @@ function DeckManager({
                 value={coverImageUrl}
                 onChange={(e) => setCoverImageUrl(e.target.value)}
                 placeholder="https://your-cdn.b-cdn.net/covers/deck-cover.png"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
               {coverImageUrl && (
                 <div className="mt-2 h-32 w-full overflow-hidden rounded-lg border bg-slate-50">
@@ -424,7 +455,7 @@ function DeckManager({
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 placeholder="e.g., animals, nature, motivation"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -570,7 +601,7 @@ function CardManager({
       } else {
         await addCard({
           deckId,
-          imageUrl: imageUrl.trim() || "https://placehold.co/600x400/8b5cf6/white?text=Card",
+          imageUrl: imageUrl.trim() || "https://placehold.co/600x400/3b82f6/white?text=Card",
           quote: quote.trim(),
           author: author.trim() || undefined,
           description: cardDescription.trim(),
@@ -597,7 +628,7 @@ function CardManager({
   };
 
   const themeColor =
-    COLOR_THEMES.find((t) => t.value === deck?.colorTheme)?.bg ?? "bg-violet-500";
+    COLOR_THEMES.find((t) => t.value === deck?.colorTheme)?.bg ?? "bg-blue-500";
 
   return (
     <>
@@ -741,7 +772,7 @@ function CardManager({
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://your-cdn.b-cdn.net/cards/card-image.png"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
               {imageUrl && (
                 <div className="mt-2 h-32 w-full overflow-hidden rounded-lg border bg-slate-50">
@@ -765,7 +796,7 @@ function CardManager({
                 onChange={(e) => setQuote(e.target.value)}
                 placeholder="The motivational quote for this card"
                 rows={2}
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
 
@@ -777,7 +808,7 @@ function CardManager({
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="e.g., Albert Einstein"
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -789,7 +820,7 @@ function CardManager({
                 onChange={(e) => setCardDescription(e.target.value)}
                 placeholder="A description or reflection prompt for this card"
                 rows={3}
-                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
           </div>

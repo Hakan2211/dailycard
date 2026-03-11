@@ -8,6 +8,9 @@ const deckColorMap: Record<string, string> = {
   emerald: "bg-emerald-500",
   amber: "bg-amber-500",
   violet: "bg-violet-500",
+  rose: "bg-rose-500",
+  sky: "bg-sky-500",
+  orange: "bg-orange-500",
 };
 
 interface CalendarViewProps {
@@ -81,7 +84,7 @@ export function CalendarView({ onDateSelect }: CalendarViewProps) {
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
-          <p className="text-2xl font-bold text-violet-600">{uniqueDays}</p>
+          <p className="text-2xl font-bold text-blue-600">{uniqueDays}</p>
           <p className="text-xs text-muted-foreground">Days Active</p>
         </div>
         <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
@@ -129,7 +132,7 @@ export function CalendarView({ onDateSelect }: CalendarViewProps) {
           }}
           modifiersClassNames={{
             drawn:
-              "bg-violet-100 text-violet-900 font-semibold hover:bg-violet-200",
+              "bg-blue-100 text-blue-900 font-semibold hover:bg-blue-200",
           }}
           className="rounded-xl border bg-white p-4 shadow-sm"
         />

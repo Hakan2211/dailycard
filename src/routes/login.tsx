@@ -23,11 +23,11 @@ function LoginPage() {
   }, [user, navigate]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-violet-50 via-white to-amber-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-slate-50 px-4">
       <div className="w-full max-w-md space-y-8 text-center">
         {/* Logo & Branding */}
         <div className="space-y-4">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-amber-500 shadow-lg">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg">
             <Sparkles className="h-10 w-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold tracking-tight">DailyCard</h1>
@@ -56,7 +56,7 @@ function LoginPage() {
             </p>
           </div>
           <div className="flex items-center gap-3 text-left">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700 text-sm font-medium">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
               3
             </div>
             <p className="text-sm text-muted-foreground">
@@ -69,7 +69,7 @@ function LoginPage() {
         <Button
           onClick={() => void signIn("google")}
           size="lg"
-          className="w-full gap-2 bg-gradient-to-r from-violet-600 to-violet-700 text-white shadow-lg hover:from-violet-700 hover:to-violet-800"
+          className="w-full gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:from-blue-700 hover:to-blue-800"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path

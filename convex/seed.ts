@@ -128,7 +128,7 @@ export const seedData = mutation({
       category: "motivation",
       totalCards: 30,
       isActive: true,
-      colorTheme: "violet",
+      colorTheme: "sky",
     });
 
     const motivationCards = [

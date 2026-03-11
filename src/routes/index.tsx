@@ -43,6 +43,27 @@ const colorThemeMap: Record<
     gradient: "from-violet-500 to-violet-700",
     badge: "bg-violet-100 text-violet-800",
   },
+  rose: {
+    bg: "bg-rose-50",
+    text: "text-rose-700",
+    border: "border-rose-200",
+    gradient: "from-rose-500 to-rose-700",
+    badge: "bg-rose-100 text-rose-800",
+  },
+  sky: {
+    bg: "bg-sky-50",
+    text: "text-sky-700",
+    border: "border-sky-200",
+    gradient: "from-sky-500 to-sky-700",
+    badge: "bg-sky-100 text-sky-800",
+  },
+  orange: {
+    bg: "bg-orange-50",
+    text: "text-orange-700",
+    border: "border-orange-200",
+    gradient: "from-orange-500 to-orange-700",
+    badge: "bg-orange-100 text-orange-800",
+  },
 };
 
 type Tab = "decks" | "calendar";
@@ -211,7 +232,7 @@ function DecksTab({
           const drawnToday = todayStatus?.[deck._id];
           const progress = allProgress?.[deck._id];
           const theme =
-            colorThemeMap[deck.colorTheme] ?? colorThemeMap.violet;
+            colorThemeMap[deck.colorTheme] ?? colorThemeMap.emerald;
           const progressPercent = progress
             ? Math.round((progress.drawn / progress.total) * 100)
             : 0;

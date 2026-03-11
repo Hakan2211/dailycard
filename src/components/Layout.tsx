@@ -18,7 +18,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md dark:bg-slate-950/80">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-violet-600" />
+            <Sparkles className="h-6 w-6 text-blue-600" />
             <span className="text-xl font-bold tracking-tight">DailyCard</span>
           </Link>
 

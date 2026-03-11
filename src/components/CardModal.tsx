@@ -28,12 +28,30 @@ const colorThemeMap: Record<string, { gradient: string; glow: string; cardBg: st
     glow: "shadow-violet-500/25",
     cardBg: "from-violet-600 to-violet-900",
   },
+  rose: {
+    gradient: "from-rose-500 to-rose-700",
+    glow: "shadow-rose-500/25",
+    cardBg: "from-rose-600 to-rose-900",
+  },
+  sky: {
+    gradient: "from-sky-500 to-sky-700",
+    glow: "shadow-sky-500/25",
+    cardBg: "from-sky-600 to-sky-900",
+  },
+  orange: {
+    gradient: "from-orange-500 to-orange-700",
+    glow: "shadow-orange-500/25",
+    cardBg: "from-orange-600 to-orange-900",
+  },
 };
 
 const colorThemeBadgeMap: Record<string, string> = {
   emerald: "bg-emerald-100 text-emerald-800",
   amber: "bg-amber-100 text-amber-800",
   violet: "bg-violet-100 text-violet-800",
+  rose: "bg-rose-100 text-rose-800",
+  sky: "bg-sky-100 text-sky-800",
+  orange: "bg-orange-100 text-orange-800",
 };
 
 // ---- Types ----
@@ -105,7 +123,7 @@ function DrawModeModal({ deckId, deck, open, onOpenChange }: DrawModeProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
 
-  const theme = colorThemeMap[deck.colorTheme] ?? colorThemeMap.violet;
+  const theme = colorThemeMap[deck.colorTheme] ?? colorThemeMap.emerald;
 
   // Reset state when modal closes
   useEffect(() => {
@@ -368,7 +386,7 @@ function ViewModeModal({
           {/* Header */}
           <div className="flex items-center justify-between p-4 pb-2">
             <Badge
-              className={`text-xs ${colorThemeBadgeMap[deck.colorTheme] ?? "bg-violet-100 text-violet-800"}`}
+              className={`text-xs ${colorThemeBadgeMap[deck.colorTheme] ?? "bg-blue-100 text-blue-800"}`}
             >
               {deck.title}
             </Badge>
@@ -416,7 +434,7 @@ function ViewModeModal({
                     key={i}
                     onClick={() => setCurrentIndex(i)}
                     className={`h-2 w-2 rounded-full transition-colors ${
-                      i === currentIndex ? "bg-violet-600" : "bg-slate-200"
+                      i === currentIndex ? "bg-blue-600" : "bg-slate-200"
                     }`}
                   />
                 ))}
@@ -532,11 +550,11 @@ function CompletionContent({
           className="absolute h-2 w-2 rounded-full"
           style={{
             backgroundColor: [
-              "#8b5cf6",
+              "#3b82f6",
               "#f59e0b",
               "#10b981",
               "#ec4899",
-              "#3b82f6",
+              "#06b6d4",
             ][i % 5],
             top: "40%",
             left: "50%",
