@@ -14,7 +14,33 @@ export default defineSchema({
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
+    // Monetization gate (billing deferred — flipped manually for now)
+    isPro: v.optional(v.boolean()),
+    plan: v.optional(v.string()), // "free" | "pro"
+    proSince: v.optional(v.number()), // epoch ms
   }).index("email", ["email"]),
+
+  // User-designed cards created in the Studio
+  studioCards: defineTable({
+    userId: v.id("users"),
+    title: v.optional(v.string()),
+    quote: v.string(),
+    author: v.optional(v.string()),
+    // Design payload — the full render spec so the studio can re-edit and the
+    // image exporter can re-render deterministically.
+    backgroundType: v.union(
+      v.literal("color"),
+      v.literal("gradient"),
+      v.literal("image")
+    ),
+    backgroundValue: v.string(), // hex, gradient css, or image URL
+    backgroundStorageId: v.optional(v.id("_storage")), // uploaded background
+    fontFamily: v.string(),
+    textColor: v.string(),
+    layout: v.string(), // "centered" | "top" | "bottom"
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
 
   // Card decks (e.g., "Mindful Animals", "Wisdom of Trees", "Motivation & Success")
   decks: defineTable({
@@ -34,6 +60,11 @@ export default defineSchema({
     quote: v.string(),
     author: v.optional(v.string()),
     description: v.string(),
+    // Longer reflective text shown in-app when a card is opened, plus a
+    // ready-to-paste social caption used as the share text. Authored in the
+    // content vault; optional so legacy/seed cards without them still validate.
+    story: v.optional(v.string()),
+    caption: v.optional(v.string()),
     cardNumber: v.number(), // Position in deck (1-N)
   }).index("by_deck", ["deckId"]),
 
@@ -57,4 +88,72 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_and_deck", ["userId", "deckId"]),
+
+  // Saved/favorite cards (curated draws or studio cards)
+  favorites: defineTable({
+    userId: v.id("users"),
+    cardId: v.optional(v.id("cards")),
+    studioCardId: v.optional(v.id("studioCards")),
+    kind: v.union(v.literal("curated"), v.literal("studio")),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_card", ["userId", "cardId"])
+    .index("by_user_and_studio", ["userId", "studioCardId"]),
+
+  // Ephemeral group sessions ("5 people, 5 cards each, look at each other's
+  // cards, nothing saved"). A cron deletes stale rows; these never touch
+  // drawHistory, so group cards never affect a user's collection or calendar.
+  groupSessions: defineTable({
+    code: v.string(), // short shareable join code
+    hostUserId: v.id("users"),
+    // Optional: rooms now deal a mixed hand from many decks, so no deck is
+    // pinned. Kept optional (not removed) so legacy single-deck rows still
+    // validate until they expire via the cleanup cron.
+    deckId: v.optional(v.id("decks")),
+    status: v.union(v.literal("open"), v.literal("closed")),
+    createdAt: v.number(),
+  }).index("by_code", ["code"]),
+
+  groupParticipants: defineTable({
+    sessionId: v.id("groupSessions"),
+    userId: v.id("users"),
+    name: v.string(),
+    cardIds: v.array(v.id("cards")), // this player's drawn hand (ephemeral)
+    joinedAt: v.number(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_session_and_user", ["sessionId", "userId"]),
+
+  // Unlocked achievement records (definitions live in code: achievementDefs.ts)
+  achievements: defineTable({
+    userId: v.id("users"),
+    key: v.string(),
+    unlockedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_key", ["userId", "key"]),
+
+  // Scheduled shares + reminders. Since there is no auto-posting, "scheduling"
+  // queues a reminder; a cron flips due rows to "reminded" and the app nudges
+  // the user to open and share.
+  scheduledShares: defineTable({
+    userId: v.id("users"),
+    cardId: v.optional(v.id("cards")),
+    studioCardId: v.optional(v.id("studioCards")),
+    kind: v.union(v.literal("curated"), v.literal("studio")),
+    scheduledFor: v.number(), // epoch ms
+    caption: v.optional(v.string()),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("reminded"),
+      v.literal("done"),
+      v.literal("cancelled")
+    ),
+    remindedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_status", ["userId", "status"])
+    .index("by_status_and_time", ["status", "scheduledFor"]),
 });

@@ -103,6 +103,8 @@ export const addCard = mutation({
     quote: v.string(),
     author: v.optional(v.string()),
     description: v.string(),
+    story: v.optional(v.string()),
+    caption: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -124,6 +126,8 @@ export const addCard = mutation({
       quote: args.quote,
       author: args.author,
       description: args.description,
+      story: args.story,
+      caption: args.caption,
       cardNumber,
     });
 
@@ -143,6 +147,8 @@ export const updateCard = mutation({
     quote: v.optional(v.string()),
     author: v.optional(v.string()),
     description: v.optional(v.string()),
+    story: v.optional(v.string()),
+    caption: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -155,6 +161,8 @@ export const updateCard = mutation({
     if (args.quote !== undefined) updates.quote = args.quote;
     if (args.author !== undefined) updates.author = args.author;
     if (args.description !== undefined) updates.description = args.description;
+    if (args.story !== undefined) updates.story = args.story;
+    if (args.caption !== undefined) updates.caption = args.caption;
 
     await ctx.db.patch(args.cardId, updates);
   },

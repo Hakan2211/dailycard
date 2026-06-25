@@ -73,6 +73,32 @@ export const getDateDraws = query({
   },
 });
 
+// Get today's draws (enriched), for the Daily 3 spread page to show what was
+// already drawn today.
+export const getTodayDraws = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const draws = await ctx.db
+      .query("drawHistory")
+      .withIndex("by_user_and_date", (q) =>
+        q.eq("userId", userId).eq("date", today)
+      )
+      .collect();
+
+    return await Promise.all(
+      draws.map(async (draw) => {
+        const card = await ctx.db.get(draw.cardId);
+        const deck = await ctx.db.get(draw.deckId);
+        return { ...draw, card, deck };
+      })
+    );
+  },
+});
+
 // Get all user draw dates (for calendar highlighting)
 export const getAllDrawDates = query({
   handler: async (ctx) => {

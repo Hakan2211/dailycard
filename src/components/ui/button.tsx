@@ -19,6 +19,11 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Frosted glass for dark/immersive surfaces. Always white text so labels
+        // never vanish against a dark card (the `outline` variant inherits its
+        // text color and goes invisible on dark).
+        glass:
+          "border border-white/15 bg-white/5 text-white shadow-xs backdrop-blur-sm hover:bg-white/10 hover:text-white",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

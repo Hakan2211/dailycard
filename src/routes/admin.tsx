@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Layout } from "@/components/Layout";
+import { SidebarLayout } from "@/components/SidebarLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,19 +31,11 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
+import { COLOR_THEMES } from "@/lib/cardTheme";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
-
-const COLOR_THEMES = [
-  { value: "emerald", label: "Emerald (Green)", bg: "bg-emerald-500" },
-  { value: "amber", label: "Amber (Gold)", bg: "bg-amber-500" },
-  { value: "violet", label: "Violet (Purple)", bg: "bg-violet-500" },
-  { value: "rose", label: "Rose (Pink)", bg: "bg-rose-500" },
-  { value: "sky", label: "Sky (Blue)", bg: "bg-sky-500" },
-  { value: "orange", label: "Orange", bg: "bg-orange-500" },
-];
 
 function AdminPage() {
   const user = useQuery(api.users.currentUser);
@@ -62,19 +54,19 @@ function AdminPage() {
 
   if (user === undefined || isAdmin === undefined) {
     return (
-      <Layout>
+      <SidebarLayout title="Admin">
         <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/15 border-t-white" />
         </div>
-      </Layout>
+      </SidebarLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <Layout>
+      <SidebarLayout title="Admin">
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center space-y-4">
-          <Shield className="h-16 w-16 text-slate-300" />
+          <Shield className="h-16 w-16 text-white/30" />
           <h1 className="text-2xl font-bold">Access Denied</h1>
           <p className="text-muted-foreground">
             You don't have permission to access the admin panel.
@@ -84,12 +76,12 @@ function AdminPage() {
             Back to Dashboard
           </Button>
         </div>
-      </Layout>
+      </SidebarLayout>
     );
   }
 
   return (
-    <Layout>
+    <SidebarLayout title="Admin">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -131,7 +123,7 @@ function AdminPage() {
           <DeckManager onSelectDeck={setSelectedDeckId} />
         )}
       </div>
-    </Layout>
+    </SidebarLayout>
   );
 }
 
@@ -254,11 +246,11 @@ function DeckManager({
         {decks?.map((deck) => (
           <div
             key={deck._id}
-            className="flex items-center gap-4 rounded-xl border bg-white p-4 shadow-sm transition-colors hover:bg-slate-50 cursor-pointer group"
+            className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition-colors hover:bg-white/5 cursor-pointer group"
             onClick={() => onSelectDeck(deck._id)}
           >
             {/* Cover Image Thumbnail */}
-            <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+            <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-white/5">
               {deck.coverImageUrl ? (
                 <img
                   src={deck.coverImageUrl}
@@ -267,7 +259,7 @@ function DeckManager({
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Image className="h-6 w-6 text-slate-300" />
+                  <Image className="h-6 w-6 text-white/30" />
                 </div>
               )}
             </div>
@@ -278,7 +270,7 @@ function DeckManager({
                 <h3 className="font-semibold truncate">{deck.title}</h3>
                 <div
                   className={`h-3 w-3 rounded-full ${
-                    COLOR_THEMES.find((t) => t.value === deck.colorTheme)?.bg ??
+                    COLOR_THEMES.find((t) => t.value === deck.colorTheme)?.dot ??
                     "bg-slate-400"
                   }`}
                 />
@@ -316,7 +308,7 @@ function DeckManager({
                     {deck.isActive ? (
                       <Eye className="h-4 w-4 text-emerald-600" />
                     ) : (
-                      <EyeOff className="h-4 w-4 text-slate-400" />
+                      <EyeOff className="h-4 w-4 text-white/40" />
                     )}
                   </Button>
                 </TooltipTrigger>
@@ -363,13 +355,13 @@ function DeckManager({
             </div>
 
             {/* Chevron hint */}
-            <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-500" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-white/50" />
           </div>
         ))}
 
         {decks?.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Layers className="h-12 w-12 text-slate-300 mb-3" />
+            <Layers className="h-12 w-12 text-white/30 mb-3" />
             <p className="text-muted-foreground">No decks yet</p>
             <p className="text-sm text-muted-foreground">
               Create your first deck to get started
@@ -434,7 +426,7 @@ function DeckManager({
                 className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
               {coverImageUrl && (
-                <div className="mt-2 h-32 w-full overflow-hidden rounded-lg border bg-slate-50">
+                <div className="mt-2 h-32 w-full overflow-hidden rounded-lg border bg-white/5">
                   <img
                     src={coverImageUrl}
                     alt="Cover preview"
@@ -469,11 +461,11 @@ function DeckManager({
                     onClick={() => setColorTheme(theme.value)}
                     className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
                       colorTheme === theme.value
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-200 bg-white hover:border-slate-300"
+                        ? "border-white/30 bg-white/15 text-white"
+                        : "border-white/10 bg-white/[0.04] hover:border-white/25"
                     }`}
                   >
-                    <div className={`h-3 w-3 rounded-full ${theme.bg}`} />
+                    <div className={`h-3 w-3 rounded-full ${theme.dot}`} />
                     {theme.label}
                   </button>
                 ))}
@@ -562,12 +554,16 @@ function CardManager({
   const [quote, setQuote] = useState("");
   const [author, setAuthor] = useState("");
   const [cardDescription, setCardDescription] = useState("");
+  const [story, setStory] = useState("");
+  const [caption, setCaption] = useState("");
 
   const resetForm = () => {
     setImageUrl("");
     setQuote("");
     setAuthor("");
     setCardDescription("");
+    setStory("");
+    setCaption("");
     setEditingCard(null);
   };
 
@@ -582,6 +578,8 @@ function CardManager({
     setQuote(card.quote);
     setAuthor(card.author ?? "");
     setCardDescription(card.description);
+    setStory(card.story ?? "");
+    setCaption(card.caption ?? "");
     setShowCardDialog(true);
   };
 
@@ -597,6 +595,8 @@ function CardManager({
           quote: quote.trim(),
           author: author.trim() || undefined,
           description: cardDescription.trim(),
+          story: story.trim() || undefined,
+          caption: caption.trim() || undefined,
         });
       } else {
         await addCard({
@@ -605,6 +605,8 @@ function CardManager({
           quote: quote.trim(),
           author: author.trim() || undefined,
           description: cardDescription.trim(),
+          story: story.trim() || undefined,
+          caption: caption.trim() || undefined,
         });
       }
       setShowCardDialog(false);
@@ -628,14 +630,14 @@ function CardManager({
   };
 
   const themeColor =
-    COLOR_THEMES.find((t) => t.value === deck?.colorTheme)?.bg ?? "bg-blue-500";
+    COLOR_THEMES.find((t) => t.value === deck?.colorTheme)?.dot ?? "bg-blue-500";
 
   return (
     <>
       {/* Deck Info Header */}
       {deck && (
-        <div className="flex items-center gap-4 rounded-xl border bg-white p-4 shadow-sm">
-          <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+        <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+          <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-white/5">
             {deck.coverImageUrl ? (
               <img
                 src={deck.coverImageUrl}
@@ -644,7 +646,7 @@ function CardManager({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
-                <Image className="h-6 w-6 text-slate-300" />
+                <Image className="h-6 w-6 text-white/30" />
               </div>
             )}
           </div>
@@ -674,15 +676,15 @@ function CardManager({
         {cards?.map((card) => (
           <div
             key={card._id}
-            className="flex items-center gap-3 rounded-xl border bg-white p-3 shadow-sm transition-colors hover:bg-slate-50"
+            className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-sm transition-colors hover:bg-white/5"
           >
             {/* Card Number */}
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/5 text-xs font-semibold text-white/50">
               {card.cardNumber}
             </div>
 
             {/* Card Image Thumbnail */}
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white/5">
               {card.imageUrl ? (
                 <img
                   src={card.imageUrl}
@@ -691,7 +693,7 @@ function CardManager({
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Image className="h-4 w-4 text-slate-300" />
+                  <Image className="h-4 w-4 text-white/30" />
                 </div>
               )}
             </div>
@@ -734,7 +736,7 @@ function CardManager({
 
         {cards?.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Image className="h-12 w-12 text-slate-300 mb-3" />
+            <Image className="h-12 w-12 text-white/30 mb-3" />
             <p className="text-muted-foreground">No cards in this deck</p>
             <p className="text-sm text-muted-foreground">
               Add your first card to get started
@@ -775,7 +777,7 @@ function CardManager({
                 className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
               {imageUrl && (
-                <div className="mt-2 h-32 w-full overflow-hidden rounded-lg border bg-slate-50">
+                <div className="mt-2 h-32 w-full overflow-hidden rounded-lg border bg-white/5">
                   <img
                     src={imageUrl}
                     alt="Card preview"
@@ -820,6 +822,30 @@ function CardManager({
                 onChange={(e) => setCardDescription(e.target.value)}
                 placeholder="A description or reflection prompt for this card"
                 rows={3}
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+            </div>
+
+            {/* Story (in-app reflective text) */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Story</label>
+              <textarea
+                value={story}
+                onChange={(e) => setStory(e.target.value)}
+                placeholder="A longer reflective paragraph shown in the app when the card is opened (falls back to Description if empty)"
+                rows={3}
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+            </div>
+
+            {/* Caption (Instagram share text) */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Instagram caption</label>
+              <textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Ready-to-paste caption (hook, CTA, hashtags) used as the share text"
+                rows={4}
                 className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>

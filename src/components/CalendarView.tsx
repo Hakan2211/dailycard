@@ -1,17 +1,8 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
 import { useState, useMemo, useEffect } from "react";
-
-const deckColorMap: Record<string, string> = {
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-  violet: "bg-violet-500",
-  rose: "bg-rose-500",
-  sky: "bg-sky-500",
-  orange: "bg-orange-500",
-};
+import { getCardTheme } from "@/lib/cardTheme";
 
 interface CalendarViewProps {
   onDateSelect: (draws: Array<{ card: any; deck: any }>) => void;
@@ -83,16 +74,16 @@ export function CalendarView({ onDateSelect }: CalendarViewProps) {
 
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
-          <p className="text-2xl font-bold text-blue-600">{uniqueDays}</p>
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+          <p className="text-2xl font-bold text-sky-400">{uniqueDays}</p>
           <p className="text-xs text-muted-foreground">Days Active</p>
         </div>
-        <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
-          <p className="text-2xl font-bold text-emerald-600">{totalDraws}</p>
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+          <p className="text-2xl font-bold text-emerald-400">{totalDraws}</p>
           <p className="text-xs text-muted-foreground">Cards Drawn</p>
         </div>
-        <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
-          <p className="text-2xl font-bold text-amber-600">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+          <p className="text-2xl font-bold text-amber-400">
             {decks?.length ?? 0}
           </p>
           <p className="text-xs text-muted-foreground">Active Decks</p>
@@ -105,7 +96,7 @@ export function CalendarView({ onDateSelect }: CalendarViewProps) {
           {decks.map((deck) => (
             <div key={deck._id} className="flex items-center gap-2">
               <div
-                className={`h-3 w-3 rounded-full ${deckColorMap[deck.colorTheme] ?? "bg-slate-500"}`}
+                className={`h-3 w-3 rounded-full ${getCardTheme(deck.colorTheme).dot}`}
               />
               <span className="text-sm text-muted-foreground">
                 {deck.title}
@@ -132,9 +123,9 @@ export function CalendarView({ onDateSelect }: CalendarViewProps) {
           }}
           modifiersClassNames={{
             drawn:
-              "bg-blue-100 text-blue-900 font-semibold hover:bg-blue-200",
+              "bg-emerald-500/20 text-emerald-200 font-semibold hover:bg-emerald-500/30",
           }}
-          className="rounded-xl border bg-white p-4 shadow-sm"
+          className="rounded-xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm"
         />
       </div>
 

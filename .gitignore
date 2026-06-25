@@ -24,3 +24,8 @@ Thumbs.db
 # Vite
 *.local
 .vite-temp/
+
+# Card-image pipeline (generated artifacts)
+out/
+scripts/.r2-uploaded.json
+convex/catalogData.ts

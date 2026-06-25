@@ -3,6 +3,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { getMood } from "@/components/stage/moods";
 import { Sparkles } from "lucide-react";
 import { useEffect } from "react";
 
@@ -22,12 +23,22 @@ function LoginPage() {
     }
   }, [user, navigate]);
 
+  const studio = getMood(undefined);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-slate-50 px-4">
-      <div className="w-full max-w-md space-y-8 text-center">
+    <div
+      className="relative flex min-h-screen flex-col items-center justify-center px-4"
+      style={{ background: studio.fallbackCss }}
+    >
+      {/* Dim the studio backdrop. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-background/80"
+      />
+      <div className="relative z-10 w-full max-w-md space-y-8 text-center">
         {/* Logo & Branding */}
         <div className="space-y-4">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-white/15 bg-white/10 shadow-lg backdrop-blur-sm">
             <Sparkles className="h-10 w-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold tracking-tight">DailyCard</h1>
@@ -38,38 +49,26 @@ function LoginPage() {
         </div>
 
         {/* Features Preview */}
-        <div className="space-y-3 rounded-2xl border bg-white/60 p-6 backdrop-blur-sm">
-          <div className="flex items-center gap-3 text-left">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium">
-              1
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.04] p-6 ring-1 ring-white/10 backdrop-blur-md">
+          {[
+            "Choose from themed decks: Animals, Trees, Motivation",
+            "Draw one card per deck each day with a beautiful flip animation",
+            "Track your journey on a 365-day calendar",
+          ].map((text, i) => (
+            <div key={i} className="flex items-center gap-3 text-left">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-sm font-medium text-white">
+                {i + 1}
+              </div>
+              <p className="text-sm text-muted-foreground">{text}</p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Choose from themed decks: Animals, Trees, Motivation
-            </p>
-          </div>
-          <div className="flex items-center gap-3 text-left">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-sm font-medium">
-              2
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Draw one card per deck each day with a beautiful flip animation
-            </p>
-          </div>
-          <div className="flex items-center gap-3 text-left">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
-              3
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Track your journey on a 365-day calendar
-            </p>
-          </div>
+          ))}
         </div>
 
         {/* Sign In Button */}
         <Button
           onClick={() => void signIn("google")}
           size="lg"
-          className="w-full gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:from-blue-700 hover:to-blue-800"
+          className="w-full gap-2 shadow-lg"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path

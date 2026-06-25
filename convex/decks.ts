@@ -1,14 +1,20 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { PRO_GATING_ENABLED, FREE_DECK_LIMIT, isProUser } from "./pro";
 
-// Get all active decks
+// Get all active decks. Once Pro gating is enabled, free users see a limited
+// set; while deferred everyone sees all.
 export const listActive = query({
   handler: async (ctx) => {
     const decks = await ctx.db
       .query("decks")
       .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
+
+    if (PRO_GATING_ENABLED && !(await isProUser(ctx))) {
+      return decks.slice(0, FREE_DECK_LIMIT);
+    }
     return decks;
   },
 });
@@ -18,30 +24,6 @@ export const getById = query({
   args: { deckId: v.id("decks") },
   handler: async (ctx, { deckId }) => {
     return await ctx.db.get(deckId);
-  },
-});
-
-// Get today's draw status for all decks (has user drawn from each deck today?)
-export const getTodayStatus = query({
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return {};
-
-    const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
-
-    const todayDraws = await ctx.db
-      .query("drawHistory")
-      .withIndex("by_user_and_date", (q) =>
-        q.eq("userId", userId).eq("date", today)
-      )
-      .collect();
-
-    // Return a map of deckId -> cardId (drawn today)
-    const status: Record<string, string> = {};
-    for (const draw of todayDraws) {
-      status[draw.deckId] = draw.cardId;
-    }
-    return status;
   },
 });
 

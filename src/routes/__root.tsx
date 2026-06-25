@@ -7,6 +7,7 @@ import {
 import type { ReactNode } from "react";
 import "../styles/globals.css";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import { THEME_INIT_SCRIPT } from "@/hooks/use-theme";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -42,8 +43,9 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased" style={{ fontFamily: "'Inter', sans-serif" }}>
