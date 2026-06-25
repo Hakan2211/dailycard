@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getCardTheme, getCardBackHex } from "@/lib/cardTheme";
@@ -17,61 +18,92 @@ export type CoverflowDeck = {
 /**
  * Horizontal 3D coverflow of deck covers. The centered deck is large and
  * face-on; neighbors angle back into the distance. Click the centered deck to
- * open it; click a side deck (or use the arrows / ← → keys) to bring it to the
- * front. The full cover is shown uncropped (`object-contain`) on a deck-tinted
- * matte. Reuses `useCarousel` for index + keyboard nav.
+ * open it; click a side deck, drag/swipe the stage, or use the arrows / ← →
+ * keys to bring another deck to the front. The full cover is shown uncropped
+ * (`object-contain`) on a deck-tinted matte. Reuses `useCarousel` for index +
+ * keyboard nav.
+ *
+ * `initialIndex` seeds the centered deck and `onIndexChange` reports it back up,
+ * so the parent can re-open the coverflow on the deck the user was last viewing
+ * instead of snapping back to the first.
  */
 export function DeckCoverflow({
   decks,
   onSelect,
+  initialIndex = 0,
+  onIndexChange,
 }: {
   decks: CoverflowDeck[];
   onSelect: (deck: CoverflowDeck) => void;
+  initialIndex?: number;
+  onIndexChange?: (index: number) => void;
 }) {
-  const { index, go, goTo } = useCarousel(decks.length);
+  const { index, go, goTo } = useCarousel(decks.length, initialIndex);
   const reduceMotion = useReducedMotion();
   const active = decks[index];
 
+  // Report the centered deck up so the parent can restore it on return.
+  useEffect(() => {
+    onIndexChange?.(index);
+  }, [index, onIndexChange]);
+
   return (
     <div className="flex w-full flex-col items-center gap-8">
+      {/* Static clip boundary: the angled side decks are translated up to
+          ±640px, so without this they paint over the sidebar and push the page
+          into horizontal scroll. Perspective lives here; the drag layer sits
+          inside so swiping can't spill past the edges either. */}
       <div
-        className="relative h-[540px] w-full sm:h-[640px]"
+        className="relative h-[540px] w-full overflow-hidden sm:h-[640px]"
         style={{ perspective: 1600 }}
         role="group"
         aria-roledescription="carousel"
       >
-        {decks.map((deck, i) => {
-          const o = i - index;
-          const abs = Math.abs(o);
-          // Only render a window of nearby cards for performance/legibility.
-          if (abs > 2) return null;
+        <motion.div
+          className="absolute inset-0 cursor-grab touch-pan-y active:cursor-grabbing"
+          style={{ transformStyle: "preserve-3d" }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.18}
+          onDragEnd={(_, info) => {
+            // Swipe/drag the stage to step decks; threshold guards stray taps.
+            if (info.offset.x < -60 || info.velocity.x < -400) go(1);
+            else if (info.offset.x > 60 || info.velocity.x > 400) go(-1);
+          }}
+        >
+          {decks.map((deck, i) => {
+            const o = i - index;
+            const abs = Math.abs(o);
+            // Only render a window of nearby cards for performance/legibility.
+            if (abs > 2) return null;
 
-          const target = reduceMotion
-            ? { x: `${o * 100}%`, rotateY: 0, z: 0, scale: 1, opacity: o === 0 ? 1 : 0 }
-            : {
-                x: o * 320,
-                rotateY: -o * 35,
-                z: -abs * 200,
-                scale: Math.max(0.7, 1 - abs * 0.17),
-                opacity: abs > 1 ? 0.5 : 1,
-              };
+            const target = reduceMotion
+              ? { x: `${o * 100}%`, rotateY: 0, z: 0, scale: 1, opacity: o === 0 ? 1 : 0 }
+              : {
+                  x: o * 320,
+                  rotateY: -o * 35,
+                  z: -abs * 200,
+                  scale: Math.max(0.7, 1 - abs * 0.17),
+                  opacity: abs > 1 ? 0.5 : 1,
+                };
 
-          return (
-            <motion.div
-              key={deck._id}
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ transformStyle: "preserve-3d", zIndex: 100 - abs }}
-              animate={target}
-              transition={{ type: "spring", stiffness: 120, damping: 22 }}
-            >
-              <DeckCard
-                deck={deck}
-                active={o === 0}
-                onClick={() => (o === 0 ? onSelect(deck) : goTo(i))}
-              />
-            </motion.div>
-          );
-        })}
+            return (
+              <motion.div
+                key={deck._id}
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ transformStyle: "preserve-3d", zIndex: 100 - abs }}
+                animate={target}
+                transition={{ type: "spring", stiffness: 120, damping: 22 }}
+              >
+                <DeckCard
+                  deck={deck}
+                  active={o === 0}
+                  onClick={() => (o === 0 ? onSelect(deck) : goTo(i))}
+                />
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
 
       {/* Controls */}
@@ -149,6 +181,13 @@ function DeckCard({
             draggable={false}
             className="max-h-full max-w-full rounded-xl object-contain shadow-lg"
           />
+          {/* "Tap to open" sits over the image so it never collides with the
+              title row below, regardless of how long the deck name is. */}
+          {active && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 rounded-b-xl bg-gradient-to-t from-black/60 to-transparent px-4 pb-3 pt-10 text-center text-xs font-medium text-white/80">
+              Tap to open
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between gap-2 p-4">
           <h3 className="truncate text-xl font-bold tracking-tight text-white">
@@ -159,11 +198,6 @@ function DeckCard({
             {deck.totalCards}
           </Badge>
         </div>
-        {active && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent px-4 pb-3 pt-8 text-center text-xs font-medium text-white/70">
-            Tap to open
-          </div>
-        )}
       </div>
     </button>
   );

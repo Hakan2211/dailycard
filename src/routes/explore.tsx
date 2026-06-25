@@ -29,6 +29,9 @@ type Deck = {
 function ExplorePage() {
   const decks = useQuery(api.decks.listActive);
   const [activeDeck, setActiveDeck] = useState<Deck | null>(null);
+  // Remember which deck was centered so returning from a deck restores it
+  // instead of snapping back to the first.
+  const [coverIndex, setCoverIndex] = useState(0);
 
   // Browsing a deck opens the full-bleed 3D stage.
   if (activeDeck) {
@@ -61,6 +64,8 @@ function ExplorePage() {
           <div className="flex flex-1 items-center justify-center">
             <DeckCoverflow
               decks={decks as CoverflowDeck[]}
+              initialIndex={coverIndex}
+              onIndexChange={setCoverIndex}
               onSelect={(d) => setActiveDeck(d as Deck)}
             />
           </div>

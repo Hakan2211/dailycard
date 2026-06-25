@@ -7,8 +7,8 @@ import { useCallback, useEffect, useState } from "react";
  *
  * `dir` is the last movement direction (-1 / 0 / +1) for entrance animations.
  */
-export function useCarousel(count: number) {
-  const [[index, dir], setState] = useState<[number, number]>([0, 0]);
+export function useCarousel(count: number, initialIndex = 0) {
+  const [[index, dir], setState] = useState<[number, number]>([initialIndex, 0]);
 
   const clamp = useCallback(
     (i: number) => Math.min(Math.max(i, 0), Math.max(count - 1, 0)),
