@@ -1,34 +1,23 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { SidebarLayout } from "@/components/SidebarLayout";
+import { LandingPage } from "@/components/landing/LandingPage";
 import { StreakHeatmap } from "@/components/StreakHeatmap";
 import { Badge } from "@/components/ui/badge";
 import { getCardTheme } from "@/lib/cardTheme";
 import { ArrowRight, Dices, Layers } from "lucide-react";
-import { useEffect } from "react";
 
 export const Route = createFileRoute("/")({
-  component: DashboardPage,
+  component: HomePage,
 });
 
-function DashboardPage() {
+function HomePage() {
   const user = useQuery(api.users.currentUser);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user === null) navigate({ to: "/login" });
-  }, [user, navigate]);
-
-  if (user === undefined) {
-    return (
-      <SidebarLayout title="Today">
-        <DashboardSkeleton />
-      </SidebarLayout>
-    );
-  }
-
-  if (user === null) return null;
+  // Logged-out visitors (and the brief SSR/loading state) see the public
+  // marketing page; authenticated users get their dashboard.
+  if (!user) return <LandingPage />;
 
   const greeting = getGreeting();
 
@@ -229,26 +218,6 @@ function RecentFavorites() {
 // ==============================
 // HELPERS
 // ==============================
-
-function DashboardSkeleton() {
-  return (
-    <div className="mx-auto w-full max-w-5xl space-y-8">
-      <div className="space-y-2">
-        <div className="h-9 w-64 animate-pulse rounded-lg bg-white/10" />
-        <div className="h-5 w-48 animate-pulse rounded-lg bg-white/5" />
-      </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-20 animate-pulse rounded-2xl border border-white/10 bg-white/5"
-          />
-        ))}
-      </div>
-      <div className="h-40 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
-    </div>
-  );
-}
 
 function getGreeting() {
   const hour = new Date().getHours();
