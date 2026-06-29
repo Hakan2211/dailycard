@@ -1,12 +1,14 @@
 // Optimize the source card JPGs into WebP and stage them under the R2 key scheme.
 //
-//   node scripts/optimize-images.mjs            # incremental (skips up-to-date)
-//   node scripts/optimize-images.mjs --force    # re-encode everything
-//   node scripts/optimize-images.mjs --clean     # wipe out/staging first
+//   node scripts/optimize-images.mjs              # EN, incremental (skips up-to-date)
+//   node scripts/optimize-images.mjs --force      # re-encode everything
+//   node scripts/optimize-images.mjs --clean      # wipe out/staging first
+//   node scripts/optimize-images.mjs --lang de    # German edition (de/ key prefix)
 //
-// No env, no network. Reads SOURCE_ROOT, writes:
-//   out/staging/cards/<deckSlug>/<NN>.webp  +  .../cover.webp
-//   out/images-manifest.json  { decks:[{ slug, coverKey, cards:[{cardNumber, key}] }] }
+// No env, no network. EN reads SOURCE_ROOT, DE reads GERMAN_SOURCE_ROOT, and writes:
+//   EN: out/staging/cards/<deckSlug>/<NN>.webp     + .../cover.webp  -> out/images-manifest.json
+//   DE: out/staging/de/cards/<deckSlug>/<NN>.webp  + .../cover.webp  -> out/images-manifest.de.json
+//   manifest: { decks:[{ slug, coverKey, cards:[{cardNumber, key}] }] }
 
 import fs from "node:fs";
 import path from "node:path";
@@ -17,10 +19,11 @@ import {
   WISDOM_SOURCE_ROOT,
   STAGING_DIR,
   OUT_DIR,
-  IMAGES_MANIFEST,
   FLAT_DECKS,
   WISDOM_DECKS,
   WISDOM_LEAF_SIZE,
+  germanDecks,
+  imagesManifestPath,
   cardKey,
   coverKey,
 } from "./config.mjs";
@@ -29,14 +32,27 @@ const FORCE = process.argv.includes("--force");
 const CLEAN = process.argv.includes("--clean");
 const IMG_RE = /\.(jpe?g|png|webp)$/i;
 
+/** Read a `--flag value` or `--flag=value` argument. */
+function argValue(flag) {
+  const i = process.argv.indexOf(flag);
+  if (i !== -1 && process.argv[i + 1]) return process.argv[i + 1];
+  const eq = process.argv.find((a) => a.startsWith(`${flag}=`));
+  return eq ? eq.slice(flag.length + 1) : null;
+}
+
+const LANG = (argValue("--lang") || "en").toLowerCase();
+const PREFIX = LANG === "de" ? "de/" : ""; // R2 key namespace per language
+// Which numbered-file variant "wins" if a folder ever has duplicates (-en vs -de).
+const PREFER_RE = LANG === "de" ? /^\d+\s*-?de/i : /^\d+\s*-?e[nm]/i;
+
 const warnings = [];
 const dropped = [];
 
 /** Classify a folder's image files into a cover + cardNumber->file map. */
-function classify(dir) {
+function classify(dir, preferRe = PREFER_RE) {
   const files = fs.readdirSync(dir).filter((f) => IMG_RE.test(f));
   let cover = null;
-  const byNum = new Map(); // num -> { file, hasEn }
+  const byNum = new Map(); // num -> { file, hasPreferred }
   for (const f of files) {
     if (/cover/i.test(f)) {
       cover = cover ?? f;
@@ -48,13 +64,13 @@ function classify(dir) {
       continue;
     }
     const num = parseInt(m[1], 10);
-    const hasEn = /^\d+\s*-?e[nm]/i.test(f); // -en / en / -em(typo) variant marker
+    const hasPreferred = preferRe.test(f); // preferred language variant marker
     const prev = byNum.get(num);
     if (!prev) {
-      byNum.set(num, { file: f, hasEn });
-    } else if (hasEn && !prev.hasEn) {
+      byNum.set(num, { file: f, hasPreferred });
+    } else if (hasPreferred && !prev.hasPreferred) {
       dropped.push(`${dir} :: ${prev.file} (dup of #${num}, prefer ${f})`);
-      byNum.set(num, { file: f, hasEn });
+      byNum.set(num, { file: f, hasPreferred });
     } else {
       dropped.push(`${dir} :: ${f} (dup of #${num}, kept ${prev.file})`);
     }
@@ -97,15 +113,8 @@ async function runPool(items, worker, concurrency) {
   process.stdout.write("\n");
 }
 
-function main() {
-  if (CLEAN && fs.existsSync(STAGING_DIR)) {
-    fs.rmSync(STAGING_DIR, { recursive: true, force: true });
-  }
-  fs.mkdirSync(STAGING_DIR, { recursive: true });
-
-  const tasks = []; // { srcPath, key }
-  const manifest = { decks: [] };
-
+/** EN: 10 flat decks + 10 Wisdom decks (each merging two 25-card leaves -> 50). */
+function collectEnglish(tasks, manifest) {
   // ---- Flat decks ----
   for (const deck of FLAT_DECKS) {
     const dir = path.join(SOURCE_ROOT, deck.sourceFolder);
@@ -168,11 +177,50 @@ function main() {
     entry.cards.sort((a, b) => a.cardNumber - b.cardNumber);
     manifest.decks.push(entry);
   }
+}
 
-  console.log(`Encoding ${tasks.length} images -> ${STAGING_DIR}`);
+/** DE: all 33 German decks are flat 50-card folders (Weisheiten included, pre-merged). */
+function collectGerman(tasks, manifest) {
+  for (const deck of germanDecks()) {
+    const dir = path.join(deck.root, deck.folder);
+    if (!fs.existsSync(dir)) {
+      warnings.push(`[${deck.slug}] German source folder missing: ${dir}`);
+      continue;
+    }
+    const { cover, byNum } = classify(dir);
+    const entry = { slug: deck.slug, coverKey: null, cards: [] };
+    if (cover) {
+      entry.coverKey = coverKey(deck.slug, PREFIX);
+      tasks.push({ srcPath: path.join(dir, cover), key: entry.coverKey });
+    } else {
+      warnings.push(`[${deck.slug}] no cover image found (${deck.folder})`);
+    }
+    for (const num of [...byNum.keys()].sort((a, b) => a - b)) {
+      const key = cardKey(deck.slug, num, PREFIX);
+      tasks.push({ srcPath: path.join(dir, byNum.get(num).file), key });
+      entry.cards.push({ cardNumber: num, key });
+    }
+    manifest.decks.push(entry);
+  }
+}
+
+function main() {
+  if (CLEAN && fs.existsSync(STAGING_DIR)) {
+    fs.rmSync(STAGING_DIR, { recursive: true, force: true });
+  }
+  fs.mkdirSync(STAGING_DIR, { recursive: true });
+
+  const tasks = []; // { srcPath, key }
+  const manifest = { decks: [] };
+
+  if (LANG === "de") collectGerman(tasks, manifest);
+  else collectEnglish(tasks, manifest);
+
+  console.log(`Encoding ${tasks.length} images (${LANG}) -> ${STAGING_DIR}`);
   return runPool(tasks, (t) => encode(t.srcPath, t.key), os.cpus().length).then(() => {
+    const manifestPath = imagesManifestPath(LANG);
     fs.mkdirSync(OUT_DIR, { recursive: true });
-    fs.writeFileSync(IMAGES_MANIFEST, JSON.stringify(manifest, null, 2));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     let totalCards = 0;
     let missingCover = 0;
@@ -195,7 +243,7 @@ function main() {
       console.log(`\nWarnings (${warnings.length}):`);
       for (const w of warnings) console.log(`  ! ${w}`);
     }
-    console.log(`\nWrote ${IMAGES_MANIFEST}`);
+    console.log(`\nWrote ${manifestPath}`);
   });
 }
 

@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
     "images:optimize": "node scripts/optimize-images.mjs",
+    "images:optimize:de": "node scripts/optimize-images.mjs --lang de",
     "images:parse": "node scripts/parse-markdown.mjs",
     "images:catalog": "node --env-file=.env.local scripts/build-catalog.mjs",
     "images:upload": "node --env-file=.env.local scripts/upload-r2.mjs",
