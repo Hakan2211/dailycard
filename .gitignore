@@ -11,7 +11,8 @@ dist/
 .env.production
 
 # Convex
-convex/_generated/
+# Note: convex/_generated/ IS committed so the Vercel build can resolve
+# "convex/_generated/api" without depending on codegen running first.
 
 # IDE
 .vscode/
