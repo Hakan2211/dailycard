@@ -12,7 +12,7 @@ export function FinalCta() {
           Your next card is waiting.
         </h2>
         <p className="mx-auto mt-5 max-w-lg text-white/60">
-          Begin your daily practice today — it takes less than a minute.
+          Begin your daily practice today. It takes less than a minute.
         </p>
         <Button onClick={start} size="lg" className="mt-8 gap-2 px-8 shadow-xl">
           Start your journey

@@ -13,6 +13,7 @@ import { internalMutation, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { catalog } from "./catalogData";
+import { catalogDe } from "./catalogData.de";
 
 // Delete a bounded batch of curated content so we never blow the per-mutation write
 // budget. The action below calls this until it returns deleted: 0.
@@ -46,12 +47,17 @@ export const wipeBatch = internalMutation({
   },
 });
 
-// Insert a single deck (by index into the bundled catalog) and its cards.
+// Insert a single deck (by index into the chosen language's catalog) and its
+// cards, tagging the deck with its edition language.
 export const importOneDeck = internalMutation({
-  args: { deckIndex: v.number() },
-  handler: async (ctx, { deckIndex }) => {
-    const deck = catalog.decks[deckIndex];
-    if (!deck) throw new Error(`No deck at index ${deckIndex}`);
+  args: {
+    deckIndex: v.number(),
+    language: v.union(v.literal("en"), v.literal("de")),
+  },
+  handler: async (ctx, { deckIndex, language }) => {
+    const source = language === "de" ? catalogDe : catalog;
+    const deck = source.decks[deckIndex];
+    if (!deck) throw new Error(`No ${language} deck at index ${deckIndex}`);
 
     const deckId = await ctx.db.insert("decks", {
       title: deck.title,
@@ -61,6 +67,7 @@ export const importOneDeck = internalMutation({
       totalCards: deck.totalCards,
       isActive: deck.isActive,
       colorTheme: deck.colorTheme,
+      language,
     });
 
     const sorted = [...deck.cards].sort((a, b) => a.cardNumber - b.cardNumber);
@@ -79,18 +86,24 @@ export const importOneDeck = internalMutation({
   },
 });
 
-// Orchestrator: wipe, then import each deck in its own transaction.
+// Orchestrator: wipe, then import every English then every German deck, each in
+// its own transaction.
 export const run = internalAction({
   args: {},
   handler: async (ctx) => {
-    // Safety: refuse to wipe + import if the catalog still has placeholder URLs
-    // (i.e. build-catalog.mjs was run without the real R2_PUBLIC_BASE_URL).
-    const sample = catalog.decks[0]?.cards[0]?.imageUrl ?? "";
-    if (!sample.startsWith("http") || sample.includes("PLACEHOLDER")) {
-      throw new Error(
-        "catalogData.ts has placeholder/invalid image URLs. Regenerate with the real " +
-          "R2 base URL first:  npm run images:catalog"
-      );
+    // Safety: refuse to wipe + import if either catalog still has placeholder
+    // URLs (build-catalog.mjs run without the real R2_PUBLIC_BASE_URL).
+    for (const [name, cat] of [
+      ["catalogData.ts", catalog],
+      ["catalogData.de.ts", catalogDe],
+    ] as const) {
+      const sample = cat.decks[0]?.cards[0]?.imageUrl ?? "";
+      if (!sample.startsWith("http") || sample.includes("PLACEHOLDER")) {
+        throw new Error(
+          `${name} has placeholder/invalid image URLs. Regenerate with the real ` +
+            `R2 base URL first:  npm run images:catalog`
+        );
+      }
     }
 
     let wiped = 0;
@@ -101,10 +114,16 @@ export const run = internalAction({
     } while (batch.deleted > 0);
 
     const results = [];
-    for (let i = 0; i < catalog.decks.length; i++) {
-      results.push(
-        await ctx.runMutation(internal.importCatalog.importOneDeck, { deckIndex: i })
-      );
+    for (const language of ["en", "de"] as const) {
+      const decks = language === "de" ? catalogDe.decks : catalog.decks;
+      for (let i = 0; i < decks.length; i++) {
+        results.push(
+          await ctx.runMutation(internal.importCatalog.importOneDeck, {
+            deckIndex: i,
+            language,
+          })
+        );
+      }
     }
     const cards = results.reduce((s, r) => s + r.cards, 0);
     console.log(`Imported ${results.length} decks / ${cards} cards (wiped ${wiped}).`);

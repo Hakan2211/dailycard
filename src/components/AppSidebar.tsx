@@ -27,11 +27,11 @@ import {
   Palette,
   Send,
   Settings,
-  Sparkles,
   Trophy,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 type NavItem = {
   title: string;
@@ -71,9 +71,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <Link to="/" className="flex items-center gap-2 px-2 py-1.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-foreground">
-            <Sparkles className="h-5 w-5" />
-          </div>
+          <BrandMark className="h-8 w-8" />
           <span className="text-lg font-bold tracking-tight">DailyCard</span>
         </Link>
       </SidebarHeader>

@@ -6,6 +6,7 @@ import { SidebarLayout } from "@/components/SidebarLayout";
 import { StudioEditor } from "@/components/studio/StudioEditor";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { useProAccess } from "@/lib/pro";
+import { useActiveLanguage } from "@/lib/language";
 
 export const Route = createFileRoute("/studio")({
   component: StudioPage,
@@ -15,6 +16,7 @@ function StudioPage() {
   const user = useQuery(api.users.currentUser);
   const navigate = useNavigate();
   const { locked } = useProAccess();
+  const { language } = useActiveLanguage();
 
   useEffect(() => {
     if (user === null) {
@@ -28,8 +30,10 @@ function StudioPage() {
     <SidebarLayout title="Studio">
       {locked ? (
         <UpgradePrompt
-          title="Card Studio is a Pro feature"
-          description="Upgrade to DailyCard Pro to design your own cards, then share and schedule them."
+          title="Card Studio is a premium feature"
+          description="Unlock a DailyCard edition to design your own cards, then share and schedule them."
+          edition={language}
+          cta="Unlock the Studio"
         />
       ) : (
         <StudioEditor />

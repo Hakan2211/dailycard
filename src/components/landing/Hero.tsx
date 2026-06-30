@@ -1,7 +1,9 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "./primitives";
+import { HeroDeckFan } from "./HeroDeckFan";
 import { useStartCta } from "./useStartCta";
+import { handleAnchorScroll } from "./smoothScroll";
 import { OFFER } from "./content";
 
 export function Hero() {
@@ -9,9 +11,11 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative mx-auto flex w-full max-w-4xl flex-col items-center px-4 pt-24 pb-16 text-center sm:pt-32 sm:pb-24"
+      className="relative mx-auto flex w-full max-w-4xl flex-col items-center px-4 pt-20 pb-16 text-center sm:pt-24 sm:pb-24"
     >
-      <Reveal>
+      <HeroDeckFan />
+
+      <Reveal className="mt-2 sm:mt-4">
         <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-medium tracking-wide text-white/65 ring-1 ring-white/10 backdrop-blur-md">
           <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
           A daily ritual for a clearer mind
@@ -20,18 +24,16 @@ export function Hero() {
 
       <Reveal delay={0.05}>
         <h1 className="mt-6 bg-gradient-to-b from-white to-white/55 bg-clip-text text-4xl font-bold leading-[1.05] tracking-tight text-transparent sm:text-6xl lg:text-7xl">
-          One card.
-          <br className="hidden sm:block" /> One moment of wisdom.
-          <br className="hidden sm:block" /> Every day.
+          Find your focus,
+          <br className="hidden sm:block" /> one card a day.
         </h1>
       </Reveal>
 
       <Reveal delay={0.1}>
         <p className="mt-6 max-w-2xl text-base text-white/65 sm:text-lg">
-          DailyCard turns a few quiet minutes into a practice. Draw from{" "}
-          {OFFER.deckCount} beautifully crafted decks, reflect on{" "}
-          {OFFER.cardCount} hand-written cards, and watch your streak grow — all
-          on a cinematic 3D stage.
+          DailyCard turns a few quiet minutes into a daily practice. Draw from{" "}
+          {OFFER.deckCount} beautifully crafted decks and {OFFER.cardCount}{" "}
+          hand-written cards, and watch your streak grow.
         </p>
       </Reveal>
 
@@ -42,7 +44,9 @@ export function Hero() {
             <ArrowRight className="h-4 w-4" />
           </Button>
           <Button asChild variant="glass" size="lg" className="px-7">
-            <a href="#features">See what's inside</a>
+            <a href="#features" onClick={handleAnchorScroll}>
+              See what's inside
+            </a>
           </Button>
         </div>
       </Reveal>

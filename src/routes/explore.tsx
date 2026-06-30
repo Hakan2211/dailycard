@@ -12,6 +12,14 @@ import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { DeckCoverflow } from "@/components/stage/DeckCoverflow";
 import type { CoverflowDeck } from "@/components/stage/DeckCoverflow";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { UpgradePanel } from "@/components/UpgradePanel";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useActiveLanguage } from "@/lib/language";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -24,14 +32,23 @@ type Deck = {
   coverImageUrl: string;
   totalCards: number;
   colorTheme: string;
+  locked?: boolean;
 };
 
 function ExplorePage() {
-  const decks = useQuery(api.decks.listActive);
+  const { language } = useActiveLanguage();
+  const decks = useQuery(api.decks.listActive, { language });
   const [activeDeck, setActiveDeck] = useState<Deck | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   // Remember which deck was centered so returning from a deck restores it
   // instead of snapping back to the first.
   const [coverIndex, setCoverIndex] = useState(0);
+
+  // Locked decks route to checkout instead of opening the stage.
+  const handleSelect = (d: Deck) => {
+    if (d.locked) setUpgradeOpen(true);
+    else setActiveDeck(d);
+  };
 
   // Browsing a deck opens the full-bleed 3D stage.
   if (activeDeck) {
@@ -45,11 +62,13 @@ function ExplorePage() {
   return (
     <SidebarLayout title="Explore">
       <div className="flex min-h-[72vh] flex-col gap-10">
-        <div className="space-y-1 text-center">
+        <div className="flex flex-col items-center gap-3 text-center">
           <h1 className="text-2xl font-bold tracking-tight">Explore the decks</h1>
           <p className="text-muted-foreground">
             Swipe through the decks — tap one to flip through its cards.
           </p>
+          {/* Only shown when the user owns both editions. */}
+          <LanguageToggle />
         </div>
 
         {decks === undefined ? (
@@ -66,11 +85,18 @@ function ExplorePage() {
               decks={decks as CoverflowDeck[]}
               initialIndex={coverIndex}
               onIndexChange={setCoverIndex}
-              onSelect={(d) => setActiveDeck(d as Deck)}
+              onSelect={(d) => handleSelect(d as Deck)}
             />
           </div>
         )}
       </div>
+
+      <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
+        <DialogContent className="border-white/10 bg-transparent p-0 shadow-none sm:max-w-lg">
+          <DialogTitle className="sr-only">Unlock more decks</DialogTitle>
+          <UpgradePanel />
+        </DialogContent>
+      </Dialog>
     </SidebarLayout>
   );
 }

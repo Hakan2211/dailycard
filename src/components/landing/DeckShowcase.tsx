@@ -1,5 +1,6 @@
 import { Reveal, SectionEyebrow } from "./primitives";
-import { DECKS, OFFER } from "./content";
+import { DECK_COVERS, OFFER, coverUrl } from "./content";
+import { getCardTheme } from "@/lib/cardTheme";
 
 export function DeckShowcase() {
   return (
@@ -13,23 +14,34 @@ export function DeckShowcase() {
           {OFFER.cardCount} cards across {OFFER.deckCount} decks
         </h2>
         <p className="mt-4 text-white/60">
-          From Stoic discipline to power animals — themed decks for every season
+          From Stoic discipline to power animals, themed decks for every season
           of your life, each with 50 hand-written cards.
         </p>
       </Reveal>
 
-      <Reveal className="mt-12">
-        <div className="flex flex-wrap justify-center gap-2.5">
-          {DECKS.map((d) => (
-            <span
-              key={d}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/75 ring-1 ring-white/10 backdrop-blur-md transition hover:border-white/25 hover:text-white"
+      <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+        {DECK_COVERS.map((deck, i) => (
+          <Reveal key={deck.slug} delay={(i % 5) * 0.05}>
+            <div
+              className={`group relative aspect-[3/4] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1.5 hover:ring-white/25 hover:shadow-2xl ${getCardTheme(deck.theme).glow}`}
             >
-              {d}
-            </span>
-          ))}
-        </div>
-      </Reveal>
+              <img
+                src={coverUrl(deck.slug)}
+                alt={deck.title}
+                loading="lazy"
+                draggable={false}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+              {/* Title scrim keeps deck names readable over the art. */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-3 pt-8">
+                <span className="text-sm font-medium leading-tight text-white drop-shadow">
+                  {deck.title}
+                </span>
+              </div>
+            </div>
+          </Reveal>
+        ))}
+      </div>
     </section>
   );
 }

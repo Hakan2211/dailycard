@@ -28,6 +28,7 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useActiveLanguage } from "@/lib/language";
 
 export const Route = createFileRoute("/group")({
   component: GroupPage,
@@ -113,6 +114,7 @@ function GroupPage() {
 
 function PassAndPlay() {
   const deal = useMutation(api.group.dealMixedHands);
+  const { language } = useActiveLanguage();
 
   const [players, setPlayers] = useState(5);
   const [names, setNames] = useState<string[]>(() =>
@@ -141,7 +143,7 @@ function PassAndPlay() {
     if (dealing) return;
     setDealing(true);
     try {
-      const res = await deal({ players });
+      const res = await deal({ players, language });
       setHands(res.hands as MixedCard[][]);
       setCurrent(0);
       setRevealed(false);
@@ -311,6 +313,7 @@ function LiveRoom({ initialCode }: { initialCode?: string }) {
   const drawHand = useMutation(api.group.drawHand);
   const closeSession = useMutation(api.group.closeSession);
   const renameParticipant = useMutation(api.group.renameParticipant);
+  const { language } = useActiveLanguage();
 
   const [code, setCode] = useState<string | null>(null);
   const [joinInput, setJoinInput] = useState(initialCode ?? "");
@@ -424,7 +427,7 @@ function LiveRoom({ initialCode }: { initialCode?: string }) {
   return (
     <RoomView
       session={session as unknown as RoomSession}
-      onDraw={() => drawHand({ sessionId: session._id })}
+      onDraw={() => drawHand({ sessionId: session._id, language })}
       onClose={() => closeSession({ sessionId: session._id })}
       onRename={(name) => renameParticipant({ sessionId: session._id, name })}
       onLeave={() => setCode(null)}

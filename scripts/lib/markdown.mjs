@@ -6,6 +6,9 @@
 
 /** Split a vault md file into per-card blocks. `·` is U+00B7. */
 function splitBlocks(md) {
+  // Normalize CRLF/CR to LF: some vault files are CRLF, and a stray `\r` breaks
+  // the fence-based caption matcher (its `[ \t]*\n` cannot absorb `\r`).
+  md = md.replace(/\r\n?/g, "\n");
   const re = /^##\s+(\d+)\s*·\s*(.+?)\s*$/gm;
   const matches = [...md.matchAll(re)];
   const blocks = [];
@@ -51,8 +54,21 @@ function extractEnHeadline(body) {
 }
 
 /**
+ * Extract the baked German headline/quote from a card block. Same two formats as
+ * the English headline, anchored on `DE:**`. The `(DE):` of a Story/Caption line
+ * never matches `DE:**`, so this only picks up the headline line. This is the exact
+ * text baked into the German card image (e.g. `ZURUECK ZUM FUNDAMENT`).
+ */
+function extractDeHeadline(body) {
+  let m = body.match(/\bDE:\*\*\s*`([^`]+)`/); // backtick form
+  if (m) return m[1].trim();
+  m = body.match(/\bDE:\*\*\s*["“]([^"“”]+)["”]/); // quoted form
+  return m ? m[1].trim() : "";
+}
+
+/**
  * Parse an image-prompts.md file.
- * Returns Map<cardNumber, { enTitle, deTitle, enHeadline }>.
+ * Returns Map<cardNumber, { enTitle, deTitle, enHeadline, deHeadline }>.
  */
 export function parseImagePrompts(md) {
   const map = new Map();
@@ -61,6 +77,7 @@ export function parseImagePrompts(md) {
       enTitle: b.enTitle,
       deTitle: b.deTitle,
       enHeadline: extractEnHeadline(b.body),
+      deHeadline: extractDeHeadline(b.body),
     });
   }
   return map;
@@ -68,18 +85,26 @@ export function parseImagePrompts(md) {
 
 /**
  * Parse a share-text.md file.
- * Returns Map<cardNumber, { storyEn?, captionEn? }>.
+ * Returns Map<cardNumber, { storyEn?, captionEn?, storyDe?, captionDe? }>.
  */
 export function parseShareText(md) {
   const map = new Map();
-  for (const b of splitBlocks(md)) {
-    const story = b.body.match(/^[ \t]*-\s*\*\*Story \(EN\):\*\*\s*(.+?)\s*$/m);
-    const cap = b.body.match(
-      /\*\*Caption \(EN\):\*\*[^\n]*\n[ \t]*```(?:text)?[ \t]*\n([\s\S]*?)\n[ \t]*```/
+  const storyRe = (lang) =>
+    new RegExp(`^[ \\t]*-\\s*\\*\\*Story \\(${lang}\\):\\*\\*\\s*(.+?)\\s*$`, "m");
+  const capRe = (lang) =>
+    new RegExp(
+      `\\*\\*Caption \\(${lang}\\):\\*\\*[^\\n]*\\n[ \\t]*\`\`\`(?:text)?[ \\t]*\\n([\\s\\S]*?)\\n[ \\t]*\`\`\``
     );
+  for (const b of splitBlocks(md)) {
+    const storyEn = b.body.match(storyRe("EN"));
+    const capEn = b.body.match(capRe("EN"));
+    const storyDe = b.body.match(storyRe("DE"));
+    const capDe = b.body.match(capRe("DE"));
     map.set(b.cardNumber, {
-      storyEn: story ? story[1].trim() : undefined,
-      captionEn: cap ? dedent(cap[1]) : undefined,
+      storyEn: storyEn ? storyEn[1].trim() : undefined,
+      captionEn: capEn ? dedent(capEn[1]) : undefined,
+      storyDe: storyDe ? storyDe[1].trim() : undefined,
+      captionDe: capDe ? dedent(capDe[1]) : undefined,
     });
   }
   return map;

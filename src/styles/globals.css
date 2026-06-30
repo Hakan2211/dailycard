@@ -127,3 +127,72 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Ambient motion for the landing page (the app's only CSS keyframes).
+ * Gentle, GPU-friendly drift + glow "breathing". All disabled under
+ * prefers-reduced-motion below.
+ * ------------------------------------------------------------------------- */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes float-y-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes float-y-fast {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+.animate-float-y {
+  animation: float-y 6s ease-in-out infinite;
+}
+.animate-float-y-slow {
+  animation: float-y-slow 8s ease-in-out infinite;
+}
+.animate-float-y-fast {
+  animation: float-y-fast 5s ease-in-out infinite;
+}
+.animate-glow-pulse {
+  animation: glow-pulse 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-y,
+  .animate-float-y-slow,
+  .animate-float-y-fast,
+  .animate-glow-pulse {
+    animation: none;
+  }
+}

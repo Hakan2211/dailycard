@@ -11,9 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme, type Theme } from "@/hooks/use-theme";
-import { PRO_GATING_ENABLED } from "@/lib/pro";
+import { useOwnedEditions, type Language } from "@/lib/pro";
+import { useActiveLanguage } from "@/lib/language";
+import { UpgradePanel } from "@/components/UpgradePanel";
 import {
   Bell,
+  Languages,
   LogOut,
   Mail,
   Moon,
@@ -93,7 +96,7 @@ function AccountSection({ user }: { user: CurrentUser | undefined }) {
   return (
     <Section
       title="Account"
-      description="Your profile is managed through your Google account."
+      description="Your profile and how you sign in to DailyCard."
     >
       <div className="flex items-center gap-4">
         {user === undefined ? (
@@ -179,49 +182,73 @@ function AppearanceSection() {
 // Plan
 // ------------------------------------------------------------------
 
+const EDITION_LABEL: Record<Language, string> = {
+  en: "English 🇬🇧",
+  de: "Deutsch 🇩🇪",
+};
+
 function PlanSection({ user }: { user: CurrentUser | undefined }) {
-  const isPro = !!user?.isPro;
+  const owned = useOwnedEditions();
+  const { language, setLanguage, canSwitch } = useActiveLanguage();
 
   return (
-    <Section
-      title="Plan"
-      description={
-        PRO_GATING_ENABLED
-          ? "Your current DailyCard plan."
-          : "Every feature is currently unlocked for everyone while Pro is in preview."
-      }
-    >
-      <div className="flex items-center justify-between gap-4">
+    <Section title="Editions" description="The DailyCard editions you own.">
+      <div className="space-y-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-foreground">
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">
-                {isPro ? "DailyCard Pro" : "Free plan"}
-              </span>
-              <Badge variant={isPro ? "default" : "secondary"}>
-                {isPro ? "Pro" : "Free"}
-              </Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              {owned.length === 0 ? (
+                <Badge variant="secondary">Free preview</Badge>
+              ) : (
+                owned.map((l) => (
+                  <Badge key={l} variant="default">
+                    {EDITION_LABEL[l]}
+                  </Badge>
+                ))
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {isPro && user?.proSince
-                ? `Pro since ${new Date(user.proSince).toLocaleDateString(undefined, { dateStyle: "medium" })}`
-                : "3D reveal, Studio, scheduling, and every topic."}
+              {owned.length === 0
+                ? "Preview only — unlock an edition to play every deck."
+                : user?.proSince
+                  ? `Lifetime access since ${new Date(user.proSince).toLocaleDateString(undefined, { dateStyle: "medium" })}`
+                  : "Lifetime access."}
             </p>
           </div>
         </div>
 
-        {!isPro && (
-          <Button
-            className="shrink-0 gap-2"
-            onClick={() => alert("Billing is coming soon!")}
-          >
-            <Sparkles className="h-4 w-4" />
-            Upgrade to Pro
-          </Button>
+        {/* Active language picker — only when both editions are owned. */}
+        {canSwitch && (
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Languages className="h-4 w-4 text-muted-foreground" />
+              Show decks in
+            </div>
+            <div className="inline-flex rounded-full border border-border bg-muted/40 p-1">
+              {(["en", "de"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLanguage(l)}
+                  aria-pressed={language === l}
+                  className={`rounded-full px-3 py-1 text-sm font-medium transition ${
+                    language === l
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {EDITION_LABEL[l]}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
+
+        {/* Buy / add an edition (renders nothing once both are owned). */}
+        <UpgradePanel />
       </div>
     </Section>
   );

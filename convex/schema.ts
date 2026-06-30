@@ -14,7 +14,12 @@ export default defineSchema({
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-    // Monetization gate (billing deferred — flipped manually for now)
+    // Per-edition entitlement — the source of truth for content access. Owning
+    // "en" unlocks the English decks, "de" the German decks, both unlocks both.
+    // Set server-side only (Stripe webhook -> grantEdition); never by clients.
+    editions: v.optional(v.array(v.union(v.literal("en"), v.literal("de")))),
+    // Legacy monetization mirror, kept for the existing settings UI. Set on the
+    // first purchase alongside `editions`.
     isPro: v.optional(v.boolean()),
     plan: v.optional(v.string()), // "free" | "pro"
     proSince: v.optional(v.number()), // epoch ms
@@ -51,7 +56,10 @@ export default defineSchema({
     totalCards: v.number(),
     isActive: v.boolean(),
     colorTheme: v.string(), // Tailwind color for UI accents (e.g., "emerald", "amber", "violet")
-  }),
+    // Edition this deck belongs to. Optional so pre-edition rows still validate;
+    // a missing value is treated as "en" everywhere (see deckLang in pro.ts).
+    language: v.optional(v.union(v.literal("en"), v.literal("de"))),
+  }).index("by_language", ["language"]),
 
   // Individual cards within a deck
   cards: defineTable({

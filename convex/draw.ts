@@ -1,8 +1,10 @@
 import { mutation } from "./_generated/server";
+import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { maybeUnlock } from "./achievements";
+import { decksWithAccess } from "./pro";
 
 type DrawResult = {
   card: Doc<"cards"> | null;
@@ -102,8 +104,8 @@ async function drawOneFromDeck(
 // user hasn't drawn from today (and that still have cards left). These are
 // recorded as normal draws, so they fill deck progress and show on the calendar.
 export const drawDailyThree = mutation({
-  args: {},
-  handler: async (ctx, { }) => {
+  args: { language: v.optional(v.union(v.literal("en"), v.literal("de"))) },
+  handler: async (ctx, { language = "en" }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
@@ -123,10 +125,12 @@ export const drawDailyThree = mutation({
       return { draws: [], totalEligible: 0, limitReached: true };
     }
 
-    const decks = await ctx.db
-      .query("decks")
-      .filter((q) => q.eq(q.field("isActive"), true))
-      .collect();
+    // Only decks in the active edition that the user can actually play (owned
+    // edition, or one of the free preview decks). Locked decks never appear in
+    // the Daily 3.
+    const decks = (await decksWithAccess(ctx, language))
+      .filter((d) => !d.locked)
+      .map((d) => d.deck);
 
     // Keep only decks the user hasn't drawn from today and that still have
     // at least one undrawn card.

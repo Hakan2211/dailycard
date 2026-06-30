@@ -28,4 +28,5 @@ Thumbs.db
 # Card-image pipeline (generated artifacts)
 out/
 scripts/.r2-uploaded.json
-convex/catalogData.ts
+# Note: convex/catalogData.ts and catalogData.de.ts ARE committed — the Convex
+# functions (importCatalog) import them, so `convex deploy` needs them in the repo.

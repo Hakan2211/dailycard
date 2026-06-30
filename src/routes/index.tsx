@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { SidebarLayout } from "@/components/SidebarLayout";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { StreakHeatmap } from "@/components/StreakHeatmap";
+import { UpgradePanel } from "@/components/UpgradePanel";
+import { useOwnedEditions } from "@/lib/pro";
 import { Badge } from "@/components/ui/badge";
 import { getCardTheme } from "@/lib/cardTheme";
-import { ArrowRight, Dices, Layers } from "lucide-react";
+import { ArrowRight, CheckCircle2, Dices, Layers, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -39,6 +42,8 @@ function HomePage() {
           </p>
         </header>
 
+        <CheckoutBanner />
+        <EntitlementCta />
         <StatTiles />
         <StreakHeatmap />
         <TodaySpread />
@@ -46,6 +51,55 @@ function HomePage() {
         <RecentFavorites />
       </div>
     </SidebarLayout>
+  );
+}
+
+// Surfaces the purchase panel for users who haven't unlocked an edition yet.
+function EntitlementCta() {
+  const owned = useOwnedEditions();
+  if (owned.length > 0) return null;
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-semibold text-white/80">Unlock DailyCard</h2>
+      <UpgradePanel />
+    </section>
+  );
+}
+
+// One-shot banner shown when returning from Stripe Checkout. The entitlement
+// itself arrives reactively via the webhook -> currentUser, so we only confirm.
+function CheckoutBanner() {
+  const [status, setStatus] = useState<"success" | "cancel" | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get("checkout");
+    if (checkout === "success" || checkout === "cancel") {
+      setStatus(checkout);
+      params.delete("checkout");
+      const qs = params.toString();
+      window.history.replaceState(
+        {},
+        "",
+        window.location.pathname + (qs ? `?${qs}` : "")
+      );
+    }
+  }, []);
+
+  if (!status) return null;
+
+  return status === "success" ? (
+    <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+      <CheckCircle2 className="h-5 w-5 shrink-0" />
+      Payment received. Your edition is being unlocked — it will appear in a
+      moment.
+    </div>
+  ) : (
+    <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/[0.04] p-4 text-sm text-white/70">
+      <XCircle className="h-5 w-5 shrink-0" />
+      Checkout canceled. You can unlock an edition any time.
+    </div>
   );
 }
 

@@ -1,21 +1,16 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { PRO_GATING_ENABLED, FREE_DECK_LIMIT, isProUser } from "./pro";
+import { decksWithAccess } from "./pro";
 
-// Get all active decks. Once Pro gating is enabled, free users see a limited
-// set; while deferred everyone sees all.
+// Active decks for one edition, each annotated with `locked`. Decks the user
+// hasn't unlocked are still returned (so Explore can show them behind a lock +
+// upgrade prompt); the first couple are a free preview for everyone.
 export const listActive = query({
-  handler: async (ctx) => {
-    const decks = await ctx.db
-      .query("decks")
-      .filter((q) => q.eq(q.field("isActive"), true))
-      .collect();
-
-    if (PRO_GATING_ENABLED && !(await isProUser(ctx))) {
-      return decks.slice(0, FREE_DECK_LIMIT);
-    }
-    return decks;
+  args: { language: v.optional(v.union(v.literal("en"), v.literal("de"))) },
+  handler: async (ctx, { language = "en" }) => {
+    const withAccess = await decksWithAccess(ctx, language);
+    return withAccess.map(({ deck, locked }) => ({ ...deck, locked }));
   },
 });
 

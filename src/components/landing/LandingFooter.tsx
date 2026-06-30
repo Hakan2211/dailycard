@@ -1,11 +1,11 @@
-import { Sparkles } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 export function LandingFooter() {
   return (
     <footer className="border-t border-white/10 bg-[#0a0c10]/60 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-white/45 sm:flex-row sm:px-6">
         <div className="flex items-center gap-2 text-white/70">
-          <Sparkles className="h-4 w-4" />
+          <BrandMark className="h-6 w-6" />
           <span className="font-semibold">DailyCard</span>
         </div>
         <nav className="flex items-center gap-6">

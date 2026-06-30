@@ -51,9 +51,13 @@ export function FeatureCard({
         {/* Text + actions. */}
         <div className="flex flex-1 flex-col justify-center gap-6 p-7 md:w-1/2 md:p-9">
           <div className="space-y-4">
-            <blockquote className="text-xl font-medium italic leading-relaxed text-white md:text-2xl">
-              &ldquo;{card.quote}&rdquo;
-            </blockquote>
+            {/* German cards carry no text quote (it's baked into the image), so
+                only render the blockquote when there's an actual quote. */}
+            {card.quote?.trim() && (
+              <blockquote className="text-xl font-medium italic leading-relaxed text-white md:text-2xl">
+                &ldquo;{card.quote}&rdquo;
+              </blockquote>
+            )}
             {card.author && (
               <p className="text-sm font-semibold text-white/55">
                 &mdash; {card.author}

@@ -14,6 +14,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0a0c10" },
       { title: "DailyCard - Draw Your Daily Inspiration" },
       {
         name: "description",
@@ -22,6 +23,10 @@ export const Route = createRootRoute({
       },
     ],
     links: [
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "icon", href: "/favicon.ico", sizes: "32x32" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
       {
         rel: "preconnect",
         href: "https://fonts.googleapis.com",

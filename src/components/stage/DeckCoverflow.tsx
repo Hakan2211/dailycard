@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { ChevronLeft, ChevronRight, Layers, Lock } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ export type CoverflowDeck = {
   coverImageUrl: string;
   totalCards: number;
   colorTheme: string;
+  locked?: boolean;
 };
 
 /**
@@ -179,13 +180,23 @@ function DeckCard({
             src={deck.coverImageUrl}
             alt={deck.title}
             draggable={false}
-            className="max-h-full max-w-full rounded-xl object-contain shadow-lg"
+            className={`max-h-full max-w-full rounded-xl object-contain shadow-lg transition ${
+              deck.locked ? "opacity-45 saturate-50" : ""
+            }`}
           />
+          {/* Locked decks get a lock chip; the parent turns a tap into checkout. */}
+          {deck.locked && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-black/55 text-white backdrop-blur-sm">
+                <Lock className="h-5 w-5" />
+              </span>
+            </div>
+          )}
           {/* "Tap to open" sits over the image so it never collides with the
               title row below, regardless of how long the deck name is. */}
           {active && (
             <div className="pointer-events-none absolute inset-x-0 bottom-0 rounded-b-xl bg-gradient-to-t from-black/60 to-transparent px-4 pb-3 pt-10 text-center text-xs font-medium text-white/80">
-              Tap to open
+              {deck.locked ? "Tap to unlock" : "Tap to open"}
             </div>
           )}
         </div>

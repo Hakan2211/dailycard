@@ -3,6 +3,7 @@ import { api } from "../../convex/_generated/api";
 import { Calendar } from "@/components/ui/calendar";
 import { useState, useMemo, useEffect } from "react";
 import { getCardTheme } from "@/lib/cardTheme";
+import { useActiveLanguage } from "@/lib/language";
 
 interface CalendarViewProps {
   onDateSelect: (draws: Array<{ card: any; deck: any }>) => void;
@@ -12,7 +13,8 @@ export function CalendarView({ onDateSelect }: CalendarViewProps) {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const decks = useQuery(api.decks.listActive);
+  const { language } = useActiveLanguage();
+  const decks = useQuery(api.decks.listActive, { language });
   const allDrawDates = useQuery(api.calendar.getAllDrawDates);
   const dateDraws = useQuery(
     api.calendar.getDateDraws,

@@ -12,6 +12,7 @@
     "images:optimize:de": "node scripts/optimize-images.mjs --lang de",
     "images:parse": "node scripts/parse-markdown.mjs",
     "images:catalog": "node --env-file=.env.local scripts/build-catalog.mjs",
+    "images:catalog:de": "node --env-file=.env.local scripts/build-catalog.mjs --lang de",
     "images:upload": "node --env-file=.env.local scripts/upload-r2.mjs",
     "images:cors": "node --env-file=.env.local scripts/set-r2-cors.mjs",
     "images:all": "node scripts/optimize-images.mjs && node scripts/parse-markdown.mjs && node --env-file=.env.local scripts/build-catalog.mjs && node --env-file=.env.local scripts/upload-r2.mjs"
@@ -39,6 +40,7 @@
     "react": "^19.2.4",
     "react-day-picker": "^9.14.0",
     "react-dom": "^19.2.4",
+    "stripe": "^22.3.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1",
     "three": "^0.180.0"

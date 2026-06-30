@@ -3,6 +3,9 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
+import { decksWithAccess, type Language } from "./pro";
+
+const LANGUAGE = v.optional(v.union(v.literal("en"), v.literal("de")));
 
 const HAND_SIZE = 5;
 const SESSION_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
@@ -37,19 +40,21 @@ async function displayName(ctx: MutationCtx, userId: Id<"users">): Promise<strin
 
 /**
  * Deal a hand of `n` cards, one from each of `n` different random decks (like
- * Daily 3 but bigger). When there are fewer than `n` active decks the deck list
- * cycles, but the cards themselves always stay distinct. May return fewer than
- * `n` if the catalog can't supply that many distinct cards — callers tolerate a
- * short hand, same as the Daily 3 spread.
+ * Daily 3 but bigger). Only draws from decks the caller can play in the given
+ * `language` (an owned edition, or a free preview deck) — so a hand never mixes
+ * languages or includes decks the user hasn't bought. When there are fewer
+ * accessible decks than `n` the deck list cycles, but the cards themselves
+ * always stay distinct. May return fewer than `n` if the accessible catalog
+ * can't supply that many distinct cards — callers tolerate a short hand.
  */
 async function drawMixedHand(
   ctx: QueryCtx | MutationCtx,
-  n: number
+  n: number,
+  language: Language
 ): Promise<MixedCard[]> {
-  const decks = await ctx.db
-    .query("decks")
-    .filter((q) => q.eq(q.field("isActive"), true))
-    .collect();
+  const decks = (await decksWithAccess(ctx, language))
+    .filter((d) => !d.locked)
+    .map((d) => d.deck);
   if (decks.length === 0) return [];
 
   // Fisher–Yates shuffle the decks so distinct decks come first.
@@ -173,11 +178,11 @@ export const renameParticipant = mutation({
   },
 });
 
-// Draw (or re-draw) the caller's hand — 5 cards from 5 different random decks.
-// Not persisted to drawHistory — this is ephemeral.
+// Draw (or re-draw) the caller's hand — 5 cards from 5 different random decks
+// in the caller's active edition. Not persisted to drawHistory — ephemeral.
 export const drawHand = mutation({
-  args: { sessionId: v.id("groupSessions") },
-  handler: async (ctx, { sessionId }) => {
+  args: { sessionId: v.id("groupSessions"), language: LANGUAGE },
+  handler: async (ctx, { sessionId, language = "en" }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
@@ -192,21 +197,21 @@ export const drawHand = mutation({
       .first();
     if (!participant) throw new Error("You have not joined this room");
 
-    const hand = await drawMixedHand(ctx, HAND_SIZE);
+    const hand = await drawMixedHand(ctx, HAND_SIZE, language);
     await ctx.db.patch(participant._id, { cardIds: hand.map((c) => c._id) });
     return { count: hand.length };
   },
 });
 
-// Pass & Play: deal `players` independent mixed hands. Writes nothing — purely
-// returns the dealt cards for a single device. Each hand mixes several decks.
+// Pass & Play: deal `players` independent mixed hands in the device owner's
+// active edition. Writes nothing — purely returns the dealt cards.
 export const dealMixedHands = mutation({
-  args: { players: v.number() },
-  handler: async (ctx, { players }) => {
+  args: { players: v.number(), language: LANGUAGE },
+  handler: async (ctx, { players, language = "en" }) => {
     const n = Math.max(1, Math.min(MAX_PLAYERS, Math.floor(players)));
     const hands: MixedCard[][] = [];
     for (let p = 0; p < n; p++) {
-      hands.push(await drawMixedHand(ctx, HAND_SIZE));
+      hands.push(await drawMixedHand(ctx, HAND_SIZE, language));
     }
     return { hands };
   },

@@ -9,12 +9,14 @@ import { getCardTheme } from "@/lib/cardTheme";
 import { Dices, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import { useActiveLanguage } from "@/lib/language";
 
 export const Route = createFileRoute("/daily")({
   component: DailyPage,
 });
 
 function DailyPage() {
+  const { language } = useActiveLanguage();
   const todayDraws = useQuery(api.calendar.getTodayDraws);
   const drawThree = useMutation(api.draw.drawDailyThree);
 
@@ -29,7 +31,7 @@ function DailyPage() {
     setDrawing(true);
     setMessage(null);
     try {
-      const res = await drawThree({});
+      const res = await drawThree({ language });
       if (res.draws.length === 0) {
         setMessage(
           "You've already drawn from every available deck today — come back tomorrow for a fresh spread."

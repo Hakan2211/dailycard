@@ -20,6 +20,13 @@ export const IMAGES_MANIFEST = path.join(OUT_DIR, "images-manifest.json");
 export const imagesManifestPath = (lang = "en") =>
   lang === "de" ? path.join(OUT_DIR, "images-manifest.de.json") : IMAGES_MANIFEST;
 export const TEXT_CATALOG = path.join(OUT_DIR, "text-catalog.json");
+/** German per-card text catalog (parsed DE fields, keyed by German deck slug). */
+export const TEXT_CATALOG_DE = path.join(OUT_DIR, "text-catalog.de.json");
+// Authored German story/caption overlay for the German-only decks. Those vault
+// folders ship image-prompts.md only (no share-text.md), so their reflection
+// text does not exist in the vault and is authored here instead. Committed data,
+// keyed by German deck slug: { "<slug>": { "<n>": { storyDe, captionDe } } }.
+export const GERMAN_STORIES = path.join(__dirname, "data", "german-stories.json");
 export const CATALOG_DATA_TS = path.join(PROJECT_ROOT, "convex", "catalogData.ts");
 export const UPLOAD_LEDGER = path.join(__dirname, ".r2-uploaded.json");
 
@@ -342,6 +349,9 @@ export const EXPECTED_CARDS =
 // the bilingual runtime phase. colorTheme MUST be one of the 6 whitelisted
 // values (src/lib/cardTheme.ts). sourceFolderDe MUST match the literal on-disk
 // folder name under GERMAN_SOURCE_ROOT (note "Philosopie" is misspelled on disk).
+// vaultSlug: the vault text folder under VAULT_ROOT that holds this deck's German
+// card text (headline + title in image-prompts.md). Only set when it differs from
+// `slug`; germanFlatTextSources() defaults vaultSlug to slug otherwise.
 export const GERMAN_ONLY_DECKS = [
   {
     slug: "mindfulness-presence",
@@ -418,6 +428,7 @@ export const GERMAN_ONLY_DECKS = [
   {
     slug: "philosophy",
     sourceFolderDe: "Philosopie",
+    vaultSlug: "philosophy-examined-life",
     title: "Philosophie",
     category: "philosophy",
     colorTheme: "violet",
@@ -427,6 +438,7 @@ export const GERMAN_ONLY_DECKS = [
   {
     slug: "behavioral-psychology",
     sourceFolderDe: "Psychologie des Verhaltens",
+    vaultSlug: "psychology-human-behavior",
     title: "Psychologie des Verhaltens",
     category: "psychology",
     colorTheme: "sky",
@@ -445,6 +457,7 @@ export const GERMAN_ONLY_DECKS = [
   {
     slug: "meaning-purpose",
     sourceFolderDe: "Sinn und Bedeutung",
+    vaultSlug: "purpose-meaning",
     title: "Sinn & Bedeutung",
     category: "meaning",
     colorTheme: "amber",
@@ -454,6 +467,7 @@ export const GERMAN_ONLY_DECKS = [
   {
     slug: "time-impermanence",
     sourceFolderDe: "Zeit und Vergänglichkeit",
+    vaultSlug: "memento-mori",
     title: "Zeit & Vergänglichkeit",
     category: "wisdom",
     colorTheme: "sky",
@@ -493,3 +507,58 @@ export const EXPECTED_DECKS_DE =
   GERMAN_ONLY_DECKS.length +
   WISDOM_DECKS.length; // 33
 export const EXPECTED_CARDS_DE = EXPECTED_DECKS_DE * 50; // 1650
+
+/**
+ * Flat (single image-prompts.md) German text sources: the 10 shared decks + the
+ * 13 German-only decks. Each maps a German deck `slug` to the vault folder that
+ * holds its German card text. Wisdom decks are NOT here, they merge two leaves
+ * under VAULT_ROOT/wisdom and are handled via WISDOM_DECKS directly.
+ * Returns: { slug, vaultSlug }
+ */
+export function germanFlatTextSources() {
+  const shared = FLAT_DECKS.filter((d) => d.sourceFolderDe).map((d) => ({
+    slug: d.slug,
+    vaultSlug: d.slug,
+  }));
+  const onlyDe = GERMAN_ONLY_DECKS.map((d) => ({
+    slug: d.slug,
+    vaultSlug: d.vaultSlug ?? d.slug,
+  }));
+  return [...shared, ...onlyDe];
+}
+
+/**
+ * Per-deck German catalog metadata for build-catalog --lang de. Same shape for
+ * all 33 decks: { slug, title, description, category, colorTheme }.
+ *   - German-only decks: fully German title + description (authored above).
+ *   - Shared (FLAT) + Wisdom decks: the German edition reuses the German FOLDER
+ *     name as the deck title (e.g. "Klares Denken", "Stoiker und Disziplin");
+ *     the English description is used as a fallback until German deck blurbs are
+ *     authored. category/colorTheme are shared with the English deck.
+ * Card-level German text (quote/story/caption) does not exist as data — it is
+ * baked into the German card images — so build-catalog leaves those empty.
+ */
+export function germanCatalogDecks() {
+  const shared = FLAT_DECKS.filter((d) => d.sourceFolderDe).map((d) => ({
+    slug: d.slug,
+    title: d.sourceFolderDe,
+    description: d.description,
+    category: d.category,
+    colorTheme: d.colorTheme,
+  }));
+  const onlyDe = GERMAN_ONLY_DECKS.map((d) => ({
+    slug: d.slug,
+    title: d.title,
+    description: d.description,
+    category: d.category,
+    colorTheme: d.colorTheme,
+  }));
+  const wisdom = WISDOM_DECKS.map((d) => ({
+    slug: d.slug,
+    title: d.germanWisdomFolder,
+    description: d.description,
+    category: d.category,
+    colorTheme: d.colorTheme,
+  }));
+  return [...shared, ...onlyDe, ...wisdom];
+}

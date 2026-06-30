@@ -8,6 +8,7 @@ import { LanguageSection } from "./LanguageSection";
 import { Pricing } from "./Pricing";
 import { FinalCta } from "./FinalCta";
 import { LandingFooter } from "./LandingFooter";
+import { EditionProvider } from "./useEdition";
 
 /**
  * Public marketing page shown at `/` to logged-out visitors. Reuses the app's
@@ -19,7 +20,8 @@ export function LandingPage() {
   const studio = getMood(undefined);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden text-foreground">
+    <EditionProvider>
+      <div className="relative min-h-screen overflow-x-clip text-foreground">
       {/* Fixed studio backdrop + dim + vignette (mirrors SidebarLayout). */}
       <div
         aria-hidden
@@ -34,6 +36,36 @@ export function LandingPage() {
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(120%_90%_at_50%_-10%,transparent_0%,rgba(5,7,10,0.5)_55%,rgba(5,7,10,0.92)_100%)]"
       />
+      {/* Soft, slowly-breathing colour blobs so the page reads warm and alive
+          instead of pure monochrome, kept low-opacity to stay premium. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+      >
+        <div
+          className="animate-glow-pulse absolute -left-40 top-[6%] h-[36rem] w-[36rem] rounded-full blur-[110px]"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(124,58,237,0.16), transparent 72%)",
+          }}
+        />
+        <div
+          className="animate-glow-pulse absolute -right-44 top-[38%] h-[34rem] w-[34rem] rounded-full blur-[110px]"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(2,132,199,0.15), transparent 72%)",
+            animationDelay: "3s",
+          }}
+        />
+        <div
+          className="animate-glow-pulse absolute bottom-[-6rem] left-[28%] h-[32rem] w-[32rem] rounded-full blur-[110px]"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(217,119,6,0.13), transparent 72%)",
+            animationDelay: "6s",
+          }}
+        />
+      </div>
 
       <LandingNav />
       <main>
@@ -46,6 +78,7 @@ export function LandingPage() {
         <FinalCta />
       </main>
       <LandingFooter />
-    </div>
+      </div>
+    </EditionProvider>
   );
 }
